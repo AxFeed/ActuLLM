@@ -1,6 +1,12 @@
 import feedparser
 from datetime import datetime
 from config import RSS_FEEDS
+import feedparser
+import hashlib
+import spacy
+from bs4 import BeautifulSoup
+
+nlp = spacy.load("fr_core_news_sm")
 
 def parse_date(entry) -> str:    # is to find the date of an article. 
     if hasattr(entry, "published_parsed") and entry.published_parsed:       # has attribute / true or false
@@ -20,13 +26,17 @@ def fetch_articles(feed_config: dict) -> list[dict]:
         title = entry.get("title", "").strip()
         print(title)
 
-        summary = entry.get("summary", entry.get("description", "")).strip()
+        summary = entry.get("summary", "").strip()
         url = entry.get("link", "").strip()
         date = parse_date(entry)
 
         # Skip empty entries
         if not title and not summary:
             continue
+
+        print("raw_text", title)
+        lemmatized_title = lemmatize(clean_html(title))
+        print("lemmatized_title", lemmatized_title)
 
         articles.append({
             "title":    title,
@@ -41,15 +51,20 @@ def fetch_articles(feed_config: dict) -> list[dict]:
     return articles
 
 
+def clean_html(text: str) -> str:
+    """Remove HTML tags from text."""
+    return BeautifulSoup(text, "html.parser").get_text(separator=" ").strip()
+
+def lemmatize(text: str) -> str:
+    """Reduce words to their base form using Spacy."""
+    doc = nlp(text)
+    return " ".join([token.lemma_ for token in doc])
+    
+
 
 if __name__ == "__main__":
 
     for feed_config in RSS_FEEDS:
         fetch_articles(feed_config)
-
-
-
-
-
 
 
