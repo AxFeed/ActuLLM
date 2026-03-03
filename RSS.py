@@ -41,7 +41,15 @@ def fetch_articles(feed_config: dict) -> list[dict]:
     return articles
 
 
+
 if __name__ == "__main__":
 
     for feed_config in RSS_FEEDS:
         fetch_articles(feed_config)
+
+
+
+
+
+
+
