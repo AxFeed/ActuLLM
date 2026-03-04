@@ -1,6 +1,4 @@
-# database.py
 import chromadb
-from ollama_call import embed
 
 client = chromadb.PersistentClient(path="./chroma_db")
 collection = client.get_or_create_collection(name="news")
@@ -38,18 +36,3 @@ def search(query: str, top_k: int = 5) -> list[dict]:
 
 
 if __name__ == "__main__":
-    fake_articles = [
-        {
-            "id":      "test-001",
-            "title":   "Macron parle de défense européenne",
-            "summary": "Le président français a évoqué le budget militaire.",
-            "url":     "https://france24.com/article1",
-            "date":    "2026-03-01",
-            "source":  "France24",
-        }
-    ]
-    add_articles(fake_articles)
-    
-    results = search("défense Europe")
-    for r in results:
-        print(r["title"], "|", r["date"])
