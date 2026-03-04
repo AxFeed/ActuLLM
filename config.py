@@ -4,12 +4,12 @@ RSS_FEEDS = [
         "url": "https://www.france24.com/fr/rss",
     },
     {
+        "name": "LeMonde",
         "url": "https://www.lemonde.fr/rss/une.xml",
-        "source": "LeMonde",
     },
     {
+        "name": "HackerNews",
         "url": "https://hnrss.org/frontpage",
-        "source": "HackerNews",
     }
 ]
 
