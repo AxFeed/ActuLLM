@@ -1,5 +1,4 @@
 import os
-import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -21,64 +20,45 @@ azure_client = AzureOpenAI(
 class QuestionRequest(BaseModel):
     question: str
     history: list[dict] = []
-    provider: str = "ollama"  # "ollama" ou "azure"
 
-def call(messages: list[dict], system: str, provider: str) -> str:
+def call(messages: list[dict], system: str) -> str:
     full_messages = [{"role": "system", "content": system}] + messages
+    response = azure_client.chat.completions.create(
+        model=os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
+        messages=full_messages,
+    )
+    return response.choices[0].message.content
 
-    if provider == "azure":
-        response = azure_client.chat.completions.create(
-            model=os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
-            messages=full_messages,
-        )
-        return response.choices[0].message.content
-
-    else:
-        payload = {
-            "model": os.environ.get("OLLAMA_MODEL"),
-            "messages": full_messages,
-            "stream": False,
-        }
-        response = requests.post(f"{os.environ.get('OLLAMA_URL')}/api/chat", json=payload)
-        response.raise_for_status()
-        return response.json()["message"]["content"]
-
-
-def ask_with_rag(question: str, history: list[dict] = None, provider: str = "ollama") -> tuple[str, list[dict]]:
+def ask_with_rag(question: str, history: list[dict] = None) -> tuple[str, list[dict]]:
     articles = search(question)
     user_message = build_rag_message(question, articles)
     messages = list(history or [])
     messages.append({"role": "user", "content": user_message})
-    answer = call(messages, SYSTEM_WITH_RAG, provider)
+    answer = call(messages, SYSTEM_WITH_RAG)
     return answer, articles
 
-
-def ask_without_rag(question: str, history: list[dict] = None, provider: str = "ollama") -> str:
+def ask_without_rag(question: str, history: list[dict] = None) -> str:
     messages = list(history or [])
     messages.append({"role": "user", "content": build_plain_message(question)})
-    return call(messages, SYSTEM_WITHOUT_RAG, provider)
+    return call(messages, SYSTEM_WITHOUT_RAG)
 
-# ─────────────────────────────────────────────
-# ROUTES
-# ─────────────────────────────────────────────
+# ── ROUTES ──────────────────────────────────────────────────────────────────
 
 @app.post("/ask/rag")
 def route_ask_with_rag(body: QuestionRequest):
     try:
-        answer, articles = ask_with_rag(body.question, body.history, body.provider)
+        answer, articles = ask_with_rag(body.question, body.history)
         return {"answer": answer, "articles": articles}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/ask/plain")
 def route_ask_without_rag(body: QuestionRequest):
     try:
-        answer = ask_without_rag(body.question, body.history, body.provider)
+        answer = ask_without_rag(body.question, body.history)
         return {"answer": answer}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/ingest")
 def route_ingest(reset: bool = False):
@@ -88,11 +68,10 @@ def route_ingest(reset: bool = False):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.get("/health")
 def health():
     return {
         "status": "ok",
-        "model": os.environ.get("OLLAMA_MODEL"),
-        "news count": count(),
+        "deployment": os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
+        "news_count": count(),
     }

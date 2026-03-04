@@ -1,48 +1,45 @@
 import os
 import chromadb
-import ollama
+from openai import AzureOpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
 
 N_RESULTS = 6
 
-client = ollama.Client(host=os.environ.get("OLLAMA_URL"))
-
+azure_client = AzureOpenAI(
+    azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+    api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+    api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-01"),
+)
 
 def embed(texts: list[str]) -> list[list[float]]:
-    vectors = []
-    for text in texts:
-        resp = client.embeddings(model=os.getenv("EMBEDDING_MODEL"), prompt=text)
-        vectors.append(resp["embedding"])
-    return vectors
-
+    response = azure_client.embeddings.create(
+        model=os.environ.get("AZURE_EMBEDDING_DEPLOYMENT"),
+        input=texts,
+    )
+    return [item.embedding for item in response.data]
 
 def _get_collection():
     chroma = chromadb.PersistentClient(path=os.environ.get("CHROMA_PATH", "./chroma_db"))
     return chroma.get_or_create_collection(
-        name=os.environ.get("COLLECTION_NAME"),
+        name=os.environ.get("COLLECTION_NAME", "actullm"),
         metadata={"hnsw:space": "cosine"},
     )
 
-
 def create_collection():
-    """Explicitly create the collection if it doesn't exist."""
     collection = _get_collection()
     print(f"[database] Collection ready. {collection.count()} documents.")
     return collection
 
-
 def reset_collection():
-    """Delete and recreate the collection."""
     chroma = chromadb.PersistentClient(path=os.environ.get("CHROMA_PATH", "./chroma_db"))
     try:
-        chroma.delete_collection(os.environ.get("COLLECTION_NAME"))
+        chroma.delete_collection(os.environ.get("COLLECTION_NAME", "actullm"))
         print("[database] Collection deleted.")
     except Exception:
         pass
     create_collection()
-
 
 def upsert_articles(articles: list[dict]):
     collection = _get_collection()
@@ -61,7 +58,6 @@ def upsert_articles(articles: list[dict]):
         added += len(batch)
     print(f"[database] {added} articles upserted. Total: {collection.count()}")
     return added
-
 
 def search(query: str, n_results: int = N_RESULTS) -> list[dict]:
     collection = _get_collection()
@@ -82,7 +78,6 @@ def search(query: str, n_results: int = N_RESULTS) -> list[dict]:
         })
     articles.sort(key=lambda a: a["metadata"].get("published_at", ""))
     return articles
-
 
 def count() -> int:
     return _get_collection().count()

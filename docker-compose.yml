@@ -1,38 +1,5 @@
 services:
 
-  ollama:
-    image: ollama/ollama
-    container_name: actullm_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 30s
-
-  ollama-init:
-    image: ollama/ollama
-    container_name: actullm_ollama_init
-    depends_on:
-      ollama:
-        condition: service_healthy
-    environment:
-      - OLLAMA_HOST=http://ollama:11434
-    entrypoint: >
-      sh -c "
-        ollama pull mistral &&
-        ollama pull nomic-embed-text &&
-        echo 'Models downloaded successfully'
-      "
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: "no"   # ne tourne qu'une fois
-
   api:
     build:
       context: .
@@ -44,11 +11,6 @@ services:
       - chroma_data:/app/chroma_db
     env_file:
       - .env
-    environment:
-      - OLLAMA_URL=http://ollama:11434
-    depends_on:
-      ollama:
-        condition: service_healthy
     restart: unless-stopped
 
   app:
@@ -67,5 +29,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  ollama_data:
   chroma_data:

@@ -17,17 +17,11 @@ st.caption("Ok Kévin, il se passe quoi dans le monde ?")
 with st.sidebar:
     st.header("Administration")
 
-    # Model selector
-    model_choice = st.radio("Modèle LLM", ["Mistral (Ollama)", "GPT (Azure)"], index=0)
-    provider = "ollama" if model_choice == "Mistral (Ollama)" else "azure"
-
-    st.divider()
-
     # News count
     try:
         health = requests.get(f"{API_URL}/health").json()
-        st.metric("Articles indexés", health.get("news count", 0))
-        st.caption(f"Modèle actif : {health.get('model', '?')}")
+        st.metric("Articles indexés", health.get("news_count", 0))
+        st.caption(f"Modèle actif : {health.get('deployment', '?')}")
     except Exception:
         st.warning("API non disponible")
 
@@ -71,7 +65,7 @@ if user_input := st.chat_input("Posez votre question sur l'actualité..."):
             try:
                 response_rag = requests.post(
                     f"{API_URL}/ask/rag",
-                    json={"question": user_input, "provider": provider}
+                    json={"question": user_input, "history": st.session_state.messages[:-1]}
                 )
                 answer_rag = response_rag.json()["answer"]
             except Exception as e:
@@ -84,7 +78,7 @@ if user_input := st.chat_input("Posez votre question sur l'actualité..."):
             try:
                 response_plain = requests.post(
                     f"{API_URL}/ask/plain",
-                    json={"question": user_input, "provider": provider}
+                    json={"question": user_input, "history": st.session_state.messages[:-1]}
                 )
                 answer_plain = response_plain.json()["answer"]
             except Exception as e:
