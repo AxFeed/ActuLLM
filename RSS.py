@@ -60,10 +60,9 @@ def lemmatize(text: str) -> str:
     doc = nlp(text)
     return " ".join([token.lemma_ for token in doc])
     
-
-
-if __name__ == "__main__":
-
+def make_id(article: dict) -> str:
+    """Unique ID based on URL."""
+    key = article["url"] or article["title"]
     for feed_config in RSS_FEEDS:
         fetch_articles(feed_config)
 
