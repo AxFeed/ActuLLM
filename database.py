@@ -13,8 +13,14 @@ azure_client = AzureOpenAI(
     api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-01"),
 )
 
+embedding_client = AzureOpenAI(
+    azure_endpoint=os.environ.get("AZURE_EMBEDDING_ENDPOINT"),
+    api_key=os.environ.get("AZURE_EMBEDDING_API_KEY"),
+    api_version=os.environ.get("AZURE_EMBEDDING_API_VERSION", "2023-05-15"),
+)
+
 def embed(texts: list[str]) -> list[list[float]]:
-    response = azure_client.embeddings.create(
+    response = embedding_client.embeddings.create(
         model=os.environ.get("AZURE_EMBEDDING_DEPLOYMENT"),
         input=texts,
     )

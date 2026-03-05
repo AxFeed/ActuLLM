@@ -42,8 +42,6 @@ def ask_without_rag(question: str, history: list[dict] = None) -> str:
     messages.append({"role": "user", "content": build_plain_message(question)})
     return call(messages, SYSTEM_WITHOUT_RAG)
 
-# ── ROUTES ──────────────────────────────────────────────────────────────────
-
 @app.post("/ask/rag")
 def route_ask_with_rag(body: QuestionRequest):
     try:

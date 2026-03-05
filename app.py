@@ -10,14 +10,9 @@ API_URL = os.getenv("API_URL")
 st.title("ActuLLM")
 st.caption("Ok Kévin, il se passe quoi dans le monde ?")
 
-# ─────────────────────────────────────────────
-# SIDEBAR
-# ─────────────────────────────────────────────
-
 with st.sidebar:
     st.header("Administration")
 
-    # News count
     try:
         health = requests.get(f"{API_URL}/health").json()
         st.metric("Articles indexés", health.get("news_count", 0))
@@ -27,7 +22,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Ingest button
     if st.button("Mettre à jour les articles", use_container_width=True):
         with st.spinner("Ingestion en cours..."):
             try:
@@ -39,10 +33,6 @@ with st.sidebar:
                     st.error(f"Erreur : {res.json().get('detail', 'Inconnue')}")
             except Exception as e:
                 st.error(f"Erreur : {e}")
-
-# ─────────────────────────────────────────────
-# CHAT
-# ─────────────────────────────────────────────
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
