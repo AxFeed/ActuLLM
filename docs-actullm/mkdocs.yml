@@ -1,0 +1,54 @@
+site_name: ActuLLM
+site_description: Documentation du projet ActuLLM — assistant d'actualités propulsé par RAG
+site_author: Équipe ActuLLM
+docs_dir: docs
+
+theme:
+  name: material
+  language: fr
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - tables
+
+nav:
+  - Accueil: index.md
+  - Guide de démarrage:
+    - Installation: guide/installation.md
+    - Configuration: guide/configuration.md
+    - Lancer le projet: guide/lancement.md
+  - Comment ça marche:
+    - Vue d'ensemble: reference/architecture.md
+    - Ingestion RSS: reference/rss.md
+    - Base vectorielle: reference/database.md
+    - API FastAPI: reference/api.md
+    - Interface Streamlit: reference/interface.md
+  - Référence technique:
+    - Diagramme de classes: technique/diagramme.md
+    - config.py: technique/config.md
+    - RSS.py: technique/rss.md
+    - database.py: technique/database.md
+    - prompting.py: technique/prompting.md
+    - api.py: technique/api.md
+    - app.py: technique/app.md
+  - Déploiement:
+    - Docker: deploy/docker.md
+    - Azure App Service: deploy/azure.md
